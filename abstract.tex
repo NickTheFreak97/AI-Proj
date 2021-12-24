@@ -1,0 +1,43 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{amsthm}
+\usepackage{graphicx}
+
+\newtheorem{proposition}{Proposizione}[section]
+
+
+\begin{document}
+	\DeclareGraphicsExtensions{.png}
+	\title{Sulla ricerca del cammino minimo con ostacoli poligonali convessi su piano}
+	\author{Niccolò Della Rocca}
+	\maketitle
+	
+	\begin{abstract}
+		Questo testo descrive ed analizza dati sperimentali relativi ad algoritmi di ricerca applicati su una classe di problemi di rilevanza pratica nella guida autonoma di robots, oltre a descrivere proprietà di questa famiglia di problemi.
+	\end{abstract}
+
+	\section{Introduzione}
+	Si consideri la seguente classe di problemi: sono assegnati un piano infinito, un punto di partenza S, un punto di 
+	destinazione G e si vuole trovare il cammino più breve tra i due. Ogni punto del piano, rappresentato tramite una coppia \textit{(x,y)}, è uno stato e lo spazio degli stati indotto è continuo, infatti stabilita un'origine arbitraria nel piano e due assi cartesiani si può decidere di prendere ad esempio $S=(0,0)$ e $G=(1,0)$ e tra i due esistono infiniti punti, e quindi infiniti stati, anche nel cammino di lunghezza minima, cioè quello che li connette in linea d'aria. Anche i cammini tra $S$ e $G$ sono infiniti, infatti si possono considerare cammini lineari della forma $S\rightarrow M\rightarrow G$ dove $M$ è un qualsiasi punto lungo la bisettrice del segmento $\overline{SG}$, e questi costituiscono una famiglia di cammini parametrizzati dall'angolo con segno $\hat{SMG}$ che è un parametro reale continuo. Reintroducendo la presenza di un insieme di poligoni convessi che fungono da ostacoli il numero di cammini varia a seconda della loro disposizione sulla scena ed al limite potrebbero non esistere cammini tra i due punti selezionati, se tutti quelli possibili in assenza di ostacoli sono adesso occlusi.
+	
+	\section{Proprietà della soluzione}
+	In questa sezione discutiamo informalmente una proprietà del cammino di lunghezza minima nel contesto descritto nella sezione precedente. Tale proprietà è espressa dal seguente risultato: 
+	\begin{proposition}\label{prop:cammino_minimo_linea_spezzata}
+		Assegnato un insieme di ostacoli poligonali disgiunti su un piano e due punti $S$ e $G$ su di esso, il cammino minimo tra questi consiste in una linea spezzata.
+	\end{proposition}
+	\begin{figure}[t]
+		\centering
+		\includegraphics[width=0.5\textwidth]{Images/polygonalPath}
+		\label{fig:intuizione_cammino_minimo}
+		\caption{Sostituzione sezione curva con segmento, prop. \ref{prop:cammino_minimo_linea_spezzata} }
+	\end{figure}
+	A sostegno di quanto proposto muoviamo la seguente argomentazione: assumiamo per assurdo che in realtà il cammino $\Gamma$ di lunghezza minima tra $S$ e $G$ sia curvo. In questo caso esiste almeno una circonferenza contenuta nello spazio vuoto che contiene una sezione curva del cammino minimo, e quest'ultima può essere sostituita col segmento che unisce i due punti in cui la curva interseca la circonferenza. Il cammino così ottenuto è localmente più corto rispetto a $\Gamma$ e questo contraddice l'ipotesi che $\Gamma$ sia il cammino minimo, infatti per essere tale deve essere il più breve in ogni sua sottosezione, cioè localmente. Una intuizione del procedimento applicato è illustrata dall'immagine \ref{fig:intuizione_cammino_minimo}.
+	
+	Una volta convinti della correttezza della proposizione \ref{prop:cammino_minimo_linea_spezzata} è intuibile che vale anche quanto segue: 
+	\begin{proposition}\label{prop:cammino_minimo_vertici}
+		Assegnato un insieme di ostacoli poligonali disgiunti su un piano e due punti $S$ e $G$ su di esso, il cammino minimo tra questi è una linea spezzata che unisce una sequenza di vertici di poligoni, ad eccezione al più dei punti estremi.
+	\end{proposition}
+	Non dimostriamo formalmente il risultato; l'intuizione che ci guida in tal senso è che in assenza di ostacoli, oppure se un cammino potesse attraversare questi, quello minimo come già evidenziato sarebbe quello in linea d'aria tra $S$ e $G$. Il fatto che gli ostacoli siano solidi ci impone di aggirarli e la proposizione \ref{prop:cammino_minimo_linea_spezzata} stabilisce che occorre farlo usando linee spezzate. Una qualsiasi linea spezzata che non congiunge due vertici di poligoni può essere sostituita con una più corta avente per estremi due vertici da cui segue \ref{prop:cammino_minimo_vertici}.
+	
+	\section{Definizione del problema di ricerca}
+	
+\end{document}

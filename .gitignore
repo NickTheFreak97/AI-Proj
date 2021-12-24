@@ -274,3 +274,9 @@ TSWLatexianTemp*
 
 # Makeindex log files
 *.lpz
+
+# Extra files to ignore
+Esercitazione.png
+
+# Extra directories to ignore
+/tmp
