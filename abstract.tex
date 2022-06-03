@@ -1,13 +1,23 @@
 \documentclass[conference]{IEEEtran}
 \usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{filecontents}
+\usepackage[noadjust]{cite}
+
+\makeatletter
+\def\endthebibliography{%
+	\def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+	\endlist
+}
 
 \newtheorem{proposition}{Proposizione}[section]
 
 
 \begin{document}
 	\DeclareGraphicsExtensions{.png}
-	\title{Sulla ricerca del cammino minimo con ostacoli poligonali convessi su piano}
+	\title{Sulla ricerca del cammino minimo con ostacoli poligonali convessi disgiunti su piano}
 	\author{Niccolò Della Rocca}
 	\maketitle
 	
@@ -39,5 +49,40 @@
 	Non dimostriamo formalmente il risultato; l'intuizione che ci guida in tal senso è che in assenza di ostacoli, oppure se un cammino potesse attraversare questi, quello minimo come già evidenziato sarebbe quello in linea d'aria tra $S$ e $G$. Il fatto che gli ostacoli siano solidi ci impone di aggirarli e la proposizione \ref{prop:cammino_minimo_linea_spezzata} stabilisce che occorre farlo usando linee spezzate. Una qualsiasi linea spezzata che non congiunge due vertici di poligoni può essere sostituita con una più corta avente per estremi due vertici da cui segue \ref{prop:cammino_minimo_vertici}.
 	
 	\section{Definizione del problema di ricerca}
+	I risultati ottenuti fanno uso della formulazione del problema di ricerca descritta in questa sottosezione. Lo spazio degli stati è formato da ogni possibile vettore spostamento da un vertice o punto di partenza o arrivo ad un altro. Lo stato iniziale è il vettore nullo applicato nel punto di partenza ed uno stato è un goal se il suo secondo estremo è il punto di destinazione. Un'azione applicabile in uno stato $\vec{s} = (s_0,s_1)$ è uno qualsiasi dei punti nella scena visibili da $s_1$, ed il risultato di una di queste sarà di cambiare lo stato da $\vec{s}$ a $\vec{s}^{\:'} (s_1, P)$ con $P$ uno dei punti visibili in $s_1$. Il costo di un'azione è definito come la norma euclidea del vettore spostamento risultante dall'applicazione dell'azione stessa, od in altri termini $d_2(s_1, P)$.
+	
+	\section{Costruzione di una scena}
+	In questo testo chiamiamo \emph{scena} una qualsiasi istanza del problema trattato, cioè un piano con un insieme di ostacoli poligonali convessi disgiunti con un punto di partenza ed uno di arrivo, che possono corrispondere a vertici oppure essere punti aggiuntivi. Il programma realizzato per analizzare gli algoritmi è dotato di una funzionalità che consente la generazione di una scena "casuale", ed opera nel modo seguente.
+	\begin{enumerate}
+		\item Dato un parametro $r_{min}\geq 21$ viene generato un insieme massimale di campioni tramite un processo di \emph{Poisson disk sampling} distanziati l'uno dall'altro almeno di $r_{min}$, che sono salvati in un array.
+		\item L'array di campioni viene permutato in maniera casuale e vengono estratti da essi i primi $p$ elementi, con $p$ un parametro impostato esternamente che rappresenta il numero di poligoni da generare.
+		\item Per ciascuno punto estratto $p_i$ si calcola la minima distanza $d_i$ dai rimanenti con l'ausilio di un 2D-tree. 
+		\item Intorno a ciascun punto si costruisce un cerchio con raggio $21 \leq r < d_i/2$ generato secondo una distribuzione che privilegia raggi più vicini a $d_i/2$. 
+		\item Per ciascun cerchio così costruito si generano $v$ angoli casuali la cui somma sia $2\pi$ con $v \leq v_{max}$, parametro impostato esternamente. Questi angoli corrisponderanno ai vertici del poligono generato.
+		\item Si sceglie un poligono a caso ed un vertice a caso su di esso come punto di partenza, e si ripete un'altra volta per produrre un punto di destinazione.
+	\end{enumerate}
+	Il campionamento tramite Poisson disk-sampling garantisce una distribuzione approssimativamente uniforme\cite{BK.KT.PTB.PKV.V16} dei circocentri dei poligoni generati, e costruire circonferenze di raggio massimo $d_i/2$ garantisce che tutti i poligoni generati saranno disgiunti. 
+	
+	Come suggerito al punto (4) si vogliono privilegiare i raggi più esterni facendo sì che i poligoni generati siano tendenzialmente grandi e costituiscano quindi ostacoli significativi. Per raggiungere questo obiettivo si usa una versione traslata e scalata della distribuzione esponenziale, tale che $\mathbb{P}(r_{min}\leq X < d_i/2) = 1$. Imponendo tale condizione si trova che la densità sarà siffatta:
+	\[ \rho_i(r) = 
+		\begin{cases}
+			0&\text{Se }r < r_{min} \\
+			\cfrac{\lambda}{e^{-\lambda r_{min}} - e^{-\lambda d_i/2} }\cdot e^{-\lambda t} &\text{Se }r_{min}\leq r < d_i/2\\
+			0&\text{Se }r\geq d_i/2
+		\end{cases}
+	\]
+	Il parametro $\lambda$ è scelto di modo che almeno il $75\%$ della distribuzione cada tra in nella prima metà di $[r_{min}, d_i/2)$. Vista la forma particolare della densità $\rho_i(r)$ si richiede piuttosto che $\mathbb P\left(X \leq 0.5(d_i/2 - r_{min}) \right) \geq 0.75$ dove $\mathbb P_{X}\sim \textsc{Exp}(\lambda)$, il ché impone il seguente lower bound:
+	\begin{equation*}
+		\lambda \geq \cfrac{1}{0.5\left(d_i/2 - r_{min}\right)}\cdot \ln(\cfrac{1}{1-0.75})
+	\end{equation*}
+	Un valore $x$ viene campionato dalla distribuzione in questione tramite la tecnica dell'inversione\cite{LD86} ed il raggio che gli corrisponde sarà $d_i/2+r_{min}-x$, in modo da correggere il fatto che la distribuzione prodotta prende valore nella prima metà di $[r_{min}, d_i/2)$ con probabilità di almeno $0.75$ e non nella seconda, come invece si vorrebbe. Vengono inoltre selezionati casualmente due poligoni distinti, e su ciascuno di essi un vertice a caso; i punti così selezionati corrisponderanno ad un punto di partenza e di arrivo casuali. Non è quindi previsto che vengano generati punti estremi negli spazi vuoti da ostacoli in maniera casuale. 
+	
+	Infine, scegliere i vertici del poligono in maniera casuale lungo le circonferenze generate garantisce che tutti i poligoni prodotti saranno convessi.
+	
+	\section{Tecnica di sperimentazione}
+	
+	
+	\bibliographystyle{ieeetran}
+	\bibliography{references}
 	
 \end{document}
