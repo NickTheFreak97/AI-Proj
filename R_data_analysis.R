@@ -4,6 +4,10 @@ library(ggpubr)
 
 df = read.csv("C:/Users/nicco/Documents/TeX/AI-Proj/data_new.csv")
 
+df$Frontier = as.numeric(df$Frontier);
+df$Explored = as.numeric(df$Explored);
+df$Generated = df$Frontier + df$Explored;
+
 summarizedDf = df %>% group_by(Algorithm, Polygons)%>%
   summarise(meanEBF = mean(EBF),
             maxEBF = max(EBF),
@@ -22,6 +26,7 @@ summarizedDf = df %>% group_by(Algorithm, Polygons)%>%
             meanExplored = mean(Explored),
             avgVertices = mean(Avg.vertices),
             Depth = mean(Depth),
+            generated = mean(Generated),
             .groups = 'drop')
 
 UC_Data <- summarizedDf[summarizedDf$Algorithm == 'UC',];
@@ -43,5 +48,5 @@ A6_Data %>%
 
 df %>% 
   group_by(Algorithm, Polygons) %>% 
-  ggline(x = "Polygons", y = "EBF", add = "mean_se", color = "Algorithm")
+  ggline(x = "Polygons", y = "Generated", add = "mean_se", color = "Algorithm")
 
