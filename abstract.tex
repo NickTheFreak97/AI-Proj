@@ -5,6 +5,9 @@
 \usepackage{graphicx}
 \usepackage{filecontents}
 \usepackage[noadjust]{cite}
+\usepackage{pdfpages}
+\usepackage{subcaption}
+\usepackage{graphicx}
 
 \makeatletter
 \def\endthebibliography{%
@@ -80,6 +83,57 @@
 	Infine, scegliere i vertici del poligono in maniera casuale lungo le circonferenze generate garantisce che tutti i poligoni prodotti saranno convessi.
 	
 	\section{Tecnica di sperimentazione}
+	Nel corso della sperimentazione sono stati raccolti i dati relativi all'esecuzione di \textsc{Uniform-Cost} ed \textsc{A*} con due diverse euristiche, ossia $d_1$ e $d_6$, rispettivamente la distanza euclidea e distanza$-$6 dello stato dalla destinazione, con un numero variabile di poligoni nella scena. Sono stati testati vari insiemi di ostacoli con cardinalità tra $2$ e $100$, con passo di $2$ per cardinalità comprese tra $2$ e $20$, e passo di $25$ per insiemi più grandi. Per ciascuna cardinalità sono state generate $25$ scene casuali con la tecnica descritta nella sezione precedente, con $v_{max}$ generato casualmente tra $8$ e $20$ e diverso da scena in scena. Per ogni mappa così prodotta sono stati eseguiti gli algoritmi sopra menzionati e per ciascuno registrate informazioni rilevanti di cui dimensione di frontiera ed insieme degli esplorati, tempo di esecuzione, memoria ed Effective Branching Factor su un file CSV, poi elabolato tramite R.
+	
+	Data la tendenza da parte del generatore casuale di scene, osservata durante la sperimentazione, di generare punti di partenza o di arrivo con assenza di ostacoli o comunque pochi di questi nel mezzo, per un numero di poligoni sufficientemente grande sono talvolta stati scelti manualmente dei punti estremi diversi da quelli generati automaticamente, nel tentativo di riequilibrare le "difficoltà" dei problemi prodotti.
+	
+	Con i risultati prodotti dalla sperimentazione sono stati formati raggruppamenti per algoritmo e numero di poligoni nella scena, e per ciascuno di questi, formato da $25$ entrate, si è calcolata la media dei parametri registrati.
+	
+	\section{Commento prestazioni}
+	\begin{figure*}
+		\centering
+		\includegraphics[width=0.96\textwidth]{Images/results_table.pdf}
+		\label{fig:result table}
+		\caption{Tabella riassuntiva costi ricerca per varie dimensioni della scena}
+	\end{figure*}
+
+	I test sono stati realizzati su un PC che monta una CPU AMD Ryzen 7 5800X @ 3.8GHz, 16GB di memoria RAM $@$ 3600MHz, CL16, ed una GPU NVidia RTX 3070 FE. 
+
+	I risultati sperimentali sono riassunti nella tabella sottostante. Da questa si evince che indipendentemente dalla dimensione del problema, riportata in termini di poligoni sulla scena, \textsc{Uniform-Cost} è sempre l'algoritmo che presenta prestazioni peggiori sia in termini di costo della ricerca (nodi generati, tempo di esecuzione e memoria) che di EBF, a cui seguono nell'ordine \textsc{A*}($d_6$) ed \textsc{A*}($d_2$); tale gerarchia è mantenuta consistentemente per qualunque numero di poligoni. In particolare si osserva che il numero di nodi generati, il tempo di esecuzione e la memoria utilizzata tendono a crescere molto velocemente in \textsc{UC} rispetto ad \textsc{A*}, con un andamento che è per tutti questi parametri esponenziale nel numero di poligoni, cfr. Figura 4. Sempre in termini del tempo di esecuzione si osserva un consistente aumento della variabilità al crescere del numero dei poligoni: ad esempio con \textsc{UC} per $100$ di questi nella scena si è registrato un tempo massimo di $457167 ms$ (oltre $7$ minuti) e minimo di $5955 ms$ (poco meno di $6s$) per una media di $103363 ms$ (poco meno di due minuti).
+	
+	Per quanto riguarda l'Effective Branching Factor, questo sembra debolmente dipendente dalla dimensione del problema per tutti gli algoritmi, e presenta una bassa variabilità rispetto al valor medio ($\sigma_{\text{EBF-UC}}\simeq 1.24$, $\sigma_{\text{EBF-A6}}\simeq 0.59$ e $\sigma_{\text{EBF-A2}}\simeq 0.41$).
+	
+	Circa il confronto tra i costi delle ricerche con  \textsc{A*} ed euristiche diverse, si ricordi che detta $d_p(\cdot,\cdot)\colon \mathbb R^2\times\mathbb R^2\mapsto\mathbb R^+$ la distanza-$p$ questa è monotona decrescente rispetto a $p$\cite{IJOPCM.10}, pertanto $d_2$ forma un'euristica più informata rispetto a quella che adotta $d_6$. Ci si aspetta pertanto che con $h_2$ \textsc{A*} espanda un numero di nodi minore rispetto ad \textsc{A*} con $h_6$, ed i dati confermano la previsione: in media con la seconda vengono generati circa l'$85.95\%$ di nodi in più, con picchi intorno al $170\%$ per dimensioni del problema più grandi, con conseguenti ripercussioni percettibili sia in termini di tempo di esecuzione che di memoria impiegata. L'effetto principale nell'aumento in percentuale dei nodi generati è dovuto soprattutto all'insieme degli esplorati, che per problemi grandi arriva a contenere oltre cinque volte tanto rispetto al caso in cui si impieghi $h_2$, mentre l'incremento percentuale della frontiera non supera il $150\%$.
+	
+	
+	\begin{figure}
+		\centering
+		\begin{subfigure}[b]{0.75\columnwidth}
+			\includegraphics[width=1\linewidth]{Images/boxplot-memory25.pdf}
+			\label{fig:Ng1} 
+		\end{subfigure}
+		\begin{subfigure}[b]{0.75\columnwidth}
+			\includegraphics[width=1\linewidth]{Images/boxplot-generated25.pdf}
+
+			\label{fig:Ng2}
+		\end{subfigure}
+		\caption{Box plot per memoria (alto, in kB) e nodi generati (basso) nel caso di scene composte da 25 poligoni ciascuna.}
+	\end{figure}
+		
+	Analizziamo adesso in maniera dettagliata un caso specifico, che è quello in cui si sono generate scene composte da 25 poligoni ciascuna. Come si evince dalla Figura 3 \textsc{Uniform-Cost}, in linea con la tendenza generale, ha prestazioni notevolmente peggiori rispetto alle due varianti di \textsc{A*} sia per quanto riguarda il tempo di esecuzione, memoria richiesta e nodi generati, a tal punto che per tutti questi indici di prestazioni il primo quartile di \textsc{UC} (primo $25\%$ della distribuzione) è vicino o addirittura inferiore al valore peggiore dei due \textsc{A*}. 
+	
+	\begin{figure*}
+		\centering
+		\includegraphics[width=\textwidth]{Images/plots.pdf}
+		\label{fig:plots}
+		\caption{Tre grafici che riportano rispettivamente l'andamento del tempo di esecuzione medio, utilizzo di memoria medio e numero medio di nodi generati in funzione delle dimensioni del problema.}
+	\end{figure*}
+	
+	La memoria massima registrata da \textsc{UC} è di circa $1.18$MB mentre quella minima è di $48.87$kB, la massima per \textsc{A*}($d_6$) è di $619.09$kB mentre la minima di $9.28$kB, la massima per \textsc{A*}($d_2$) è stata di $308.81$kB e la minima di $7.36$kB. Il $75\%$ dei valori di memoria registrati per \textsc{A*}$(d_2)$ è inferiore al $50\%$ di quelli rilevati per lo stesso algoritmo con $d_6$, e si osserva che la mediana per \textsc{A*}$(d_2)$ è molto vicina al quartile di livello $0.25$ suggerendo una bassa varianza per questo parametro. 
+	
+	Similmente per quanto riguarda la distribuzione del numero di nodi generati dai vari algoritmi si osserva che \textsc{Uniform-Cost} presenta un'elevata variabilità ed un quartile di livello $0.25$, pari a $2504$ nodi, inferiore rispetto a quello di livello $0.25$, corrispondente a $1298$ nodi, di \textsc{A*} con $d_6$. Allo stesso modo, quando si usa $d_2$ come euristica si ottiene un quartile di livello $0.75$, corrispondente a $794$ nodi, inferiore alla mediana di \textsc{A*}($h_6$), ossia $872$ nodi.
+	
+	La stessa gerarchia di prestazioni che emerge dall'analisi di questi due parametri, che vede \textsc{A*} con $d_2$ prevalere su tutta la linea sull'analogo con $d_6$, a sua volta decisamente migliore di \textsc{Uniform-Cost}, si ripresenta in maniera ancora più pronunciata sui tempi di esecuzione, che vedono assegnare il primato di tempo peggiore a quest'ultimo, con ben $11.14$s, contro $2.14$s ed $1.06$s di \textsc{A*}($d_6$) e \textsc{A*}($d_2$) rispettivamente. Per quanto riguarda il confronto da gli ultimi due, per questi la differenza è meno netta rispetto a quanto non lo fosse per gli altri parametri, con quartili $0.25$-$0.50$-$0.75$ di $101$ms$-185$ms$-0.275$ms per la variante con $d_6$ e $37$ms$-69$ms$-154$ms per quella con $d_2$.
 	
 	
 	\bibliographystyle{ieeetran}
